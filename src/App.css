@@ -3,14 +3,9 @@
 }
 
 .App-logo {
+  animation: App-logo-spin infinite 20s linear;
   height: 40vmin;
   pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
 }
 
 .App-header {
@@ -35,4 +30,63 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+}
+
+/* @font-face {
+  font-family: "DS-Digital";
+  src: url("/ds-digit.ttf");
+} */
+
+.clock {
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  font-size: 10vw;
+  color: white;
+  font-family: Geneva, Tahoma, sans-serif;
+}
+.clock.show-cursor .time.editing {
+  background: #666;
+}
+
+.tips {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  color: #666;
+  line-height: 2;
+}
+.tips li {
+  text-align: left;
+}
+.tips button {
+  background: rgba(0,0,0,0);
+  color: inherit;
+  font-size: 12px;
+}
+.tips li > button {
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 0 4px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+.tips .tip {
+  margin-left: 4px;
+}
+.tips .tip > button {
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
 }
