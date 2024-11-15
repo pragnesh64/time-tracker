@@ -45,7 +45,7 @@ body {
 /* Clock Styles */
 .clock {
   position: fixed;
-  left: 50%;
+  left: 30%;
   top: 40%;
   transform: translate(-50%, -50%);
   font-size: 10vw;
@@ -105,6 +105,9 @@ body {
 
 /* History Styles */
 .history {
+  position: absolute;
+  top: 20px;
+  right: 50px;
   margin-top: 20px;
   width: 80%;
   max-width: 600px;

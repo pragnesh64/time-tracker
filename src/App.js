@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import clsx from 'clsx';
-import * as XLSX from 'xlsx';
-import './App.css';
+import React, { Component } from "react";
+import clsx from "clsx";
+import * as XLSX from "xlsx";
+import "./App.css";
 
 const pad = (n) => (n < 10 ? `0${n}` : n);
 
@@ -11,30 +11,30 @@ class App extends Component {
     this.state = {
       t: 0,
       paused: true,
-      mode: 'stopwatch',
+      mode: "stopwatch",
       fullscreen: false,
       adjusting: false,
       editing: null,
       showCursor: false,
-      logs: [], // Added to store log history
+      logs: JSON.parse(localStorage.getItem("logs")) || [],
     };
     this.timer = null;
   }
 
   componentDidMount() {
-    const savedTimer = localStorage.getItem('timer');
+    const savedTimer = localStorage.getItem("timer");
     if (savedTimer) {
       this.setState(JSON.parse(savedTimer));
     }
     this.timer = setInterval(() => {
       this.tick();
     }, 1000);
-    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener("keydown", this.handleKeyDown);
   }
 
   componentWillUnmount() {
     clearInterval(this.timer);
-    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener("keydown", this.handleKeyDown);
   }
 
   tick() {
@@ -45,7 +45,7 @@ class App extends Component {
     if (paused) return;
 
     this.setState((prevState) => {
-      const t = prevState.t + (mode === 'countdown' ? -1 : 1);
+      const t = prevState.t + (mode === "countdown" ? -1 : 1);
       if (t <= 0) {
         return {
           t: 0,
@@ -60,7 +60,7 @@ class App extends Component {
   }
 
   saveTimer = () => {
-    localStorage.setItem('timer', JSON.stringify(this.state));
+    localStorage.setItem("timer", JSON.stringify(this.state));
   };
 
   toggleFullScreen = () => {
@@ -76,42 +76,84 @@ class App extends Component {
   };
 
   resetTimer = () => {
-    this.setState({
-      t: 0,
-      paused: true,
-    }, this.saveTimer);
+    this.setState(
+      {
+        t: 0,
+        paused: true,
+      },
+      this.saveTimer
+    );
   };
 
   switchMode = (mode) => {
-    this.setState({
-      mode: mode || (this.state.mode === 'stopwatch' ? 'countdown' : 'stopwatch'),
-    }, this.saveTimer);
+    this.setState(
+      {
+        mode:
+          mode || (this.state.mode === "stopwatch" ? "countdown" : "stopwatch"),
+      },
+      this.saveTimer
+    );
   };
 
   pauseTimer = () => {
     const { t, paused, mode, logs } = this.state;
 
     if (paused) {
-      // Start logging when the timer is started
       const startTime = new Date();
-      this.setState({
-        logs: [...logs, { id: logs.length + 1, startTime: startTime.toLocaleTimeString(), stopTime: null }],
-      });
+      this.setState(
+        {
+          logs: [
+            ...logs,
+            {
+              id: logs.length + 1,
+              startTime: startTime.toLocaleTimeString(),
+              stopTime: null,
+            },
+          ],
+        },
+        this.saveLogs
+      );
     } else {
-      // Log the stop time when paused
       const stopTime = new Date().toLocaleTimeString();
-      this.setState(prevState => ({
-        logs: prevState.logs.map(log => 
-          log.stopTime === null ? { ...log, stopTime } : log
-        ),
-      }));
+      this.setState(
+        (prevState) => ({
+          logs: prevState.logs.map((log) =>
+            log.stopTime === null ? { ...log, stopTime } : log
+          ),
+        }),
+        this.saveLogs
+      );
     }
 
-    this.setState((prevState) => ({
-      paused: !prevState.paused,
-      editing: false,
-    }), this.saveTimer);
+    this.setState(
+      (prevState) => ({
+        paused: !prevState.paused,
+        editing: false,
+      }),
+      this.saveTimer
+    );
   };
+
+  saveLogs = () => {
+    localStorage.setItem("logs", JSON.stringify(this.state.logs));
+  };
+
+  deleteLog = (id) => {
+   let data = JSON.parse(localStorage.getItem("timer"))
+   let logs = data.logs.filter(log => log.id !== id);
+   console.log(data,"data") 
+   
+   localStorage.setItem("timer",JSON.stringify({...data,logs:logs}))
+   // Filter out the log with the matching id from the state
+    const updatedLogs = this.state.logs.filter(log => log.id !== id);
+    
+    // Update the state with the new list of logs
+    this.setState({ logs: updatedLogs }, () => {
+      // Save the updated logs array to localStorage
+      localStorage.setItem('logs', JSON.stringify(updatedLogs));
+    });
+  };
+  
 
   handleKeyDown = (event) => {
     switch (event.key) {
@@ -123,6 +165,7 @@ class App extends Component {
       case "r":
         this.resetTimer();
         break;
+
       case "Enter":
         this.toggleEditing();
         break;
@@ -139,69 +182,48 @@ class App extends Component {
   };
 
   exportToExcel = () => {
-    // Get the current date
-    const currentDate = new Date().toLocaleDateString(); // Use the current date in MM/DD/YYYY format
-  
-    // Format time from seconds (this.state.t)
+    const currentDate = new Date().toLocaleDateString();
     const hours = Math.floor(this.state.t / 3600);
     const minutes = Math.floor((this.state.t % 3600) / 60);
     const seconds = this.state.t % 60;
-  
-    // Pad single digits to two digits (e.g., 5 -> 05)
-    const pad = (num) => num.toString().padStart(2, '0');
     const formattedTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  
-    // Get the mode label (change 'stopwatch' to 'Workhours')
-    const modeLabel = this.state.mode === 'stopwatch' ? 'Workhours' : this.state.mode;
-  
-    // Create the data object for export (for the current timer)
+    const modeLabel =
+      this.state.mode === "stopwatch" ? "Workhours" : this.state.mode;
+
     const data = [
       {
-        Company: "Quantumbot", // Fixed company name
-        Date: currentDate,      // Current date in the format
-        Timer: formattedTime,   // Formatted time
-        Mode: modeLabel,        // Mode label (either 'stopwatch' or another mode)
-        Paused: this.state.paused ? 'Yes' : 'No', // Paused status
+        Company: "Quantumbot",
+        Date: currentDate,
+        Timer: formattedTime,
+        Mode: modeLabel,
+        Paused: this.state.paused ? "Yes" : "No",
       },
     ];
-  
-    // Convert the data to a sheet
+
     const worksheet = XLSX.utils.json_to_sheet(data);
-  
-    // Create a new workbook
     const workbook = XLSX.utils.book_new();
-    
-    // Append the sheet to the workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, "TimerData");
-  
-    // Write the workbook to an Excel file with the current date in the filename
     XLSX.writeFile(workbook, `timer_data_${currentDate}.xlsx`);
-  
-    // Export all logs to Excel with today's date
+
     const logData = this.state.logs.map((log) => ({
-      Date: currentDate,  // Add today's date to each log entry
+      Date: currentDate,
       Log: `Log ${log.id}`,
       Start: log.startTime,
       Stop: log.stopTime || "Still running",
-      Mode: this.state.mode === 'stopwatch' ? 'Workhours' : this.state.mode,
-      Paused: this.state.paused ? 'Yes' : 'No',
+      Mode: this.state.mode === "stopwatch" ? "Workhours" : this.state.mode,
+      Paused: this.state.paused ? "Yes" : "No",
     }));
-  
+
     const logWorksheet = XLSX.utils.json_to_sheet(logData);
     const logWorkbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(logWorkbook, logWorksheet, "LogHistory");
     XLSX.writeFile(logWorkbook, `timer_logs_${currentDate}.xlsx`);
   };
-  
-  deleteLog = (id) => {
-    this.setState(prevState => ({
-      logs: prevState.logs.filter(log => log.id !== id),
-    }));
-  };
 
   render() {
-    const { t, paused, editing, mode, showCursor, fullscreen, logs } = this.state;
-    
+    const { t, paused, editing, mode, showCursor, fullscreen, logs } =
+      this.state;
+
     const hours = parseInt(t / 3600);
     const minutes = parseInt((t % 3600) / 60);
     const seconds = parseInt(t % 60);
@@ -209,36 +231,61 @@ class App extends Component {
     return (
       <div className="App">
         <div
-          className={clsx('clock', { 'show-cursor': showCursor })}
+          className={clsx("clock", { "show-cursor": showCursor })}
           onDoubleClick={this.toggleFullScreen}
         >
-          <span className={clsx('time hour', { editing: editing === 'hour' })}>{pad(hours)}</span>:
-          <span className={clsx('time minute', { editing: editing === 'minute' })}>{pad(minutes)}</span>:
-          <span className={clsx('time second', { editing: editing === 'second' })}>{pad(seconds)}</span>
+          <span className={clsx("time hour", { editing: editing === "hour" })}>
+            {pad(hours)}
+          </span>
+          :
+          <span
+            className={clsx("time minute", { editing: editing === "minute" })}
+          >
+            {pad(minutes)}
+          </span>
+          :
+          <span
+            className={clsx("time second", { editing: editing === "second" })}
+          >
+            {pad(seconds)}
+          </span>
         </div>
 
-        {/* Display log history */}
         <div className="history">
           <h2>Log History</h2>
-          {logs.map(log => (
-            <div key={log.id} className="log-entry">
-              <div className="log-part">Log {log.id}:</div>
-              <div className="log-part">Start at {log.startTime}</div>
-              {log.stopTime && <div className="log-part">Stop at {log.stopTime}</div>}
-              <button className="delete-button" onClick={() => this.deleteLog(log.id)}>Delete</button>
-            </div>
-          ))}
+          {logs.length > 0 ? (
+            logs.map((log) => (
+              <div key={log.id} className="log-entry">
+                <div className="log-part">Log {log.id}:</div>
+                <div className="log-part">Start at {log.startTime}</div>
+                {log.stopTime && (
+                  <div className="log-part">Stop at {log.stopTime}</div>
+                )}
+                <button
+                  className="delete-button"
+                  onClick={() => this.deleteLog(log.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>No logs available</p>
+          )}
         </div>
 
         <ul className="tips">
           <li>
-            <button onClick={this.pauseTimer}>Space</button> - <span className="tip">{paused ? 'start' : 'pause'} timer</span>
+            <button onClick={this.pauseTimer}>Space</button> -{" "}
+            <span className="tip">{paused ? "start" : "pause"} timer</span>
           </li>
           <li>
-            <button onClick={this.resetTimer}>R</button> - <span className="tip">reset timer</span>
+            <button onClick={this.resetTimer}>R</button> -{" "}
+            <span className="tip">reset timer</span>
           </li>
           <li>
-            <button onClick={this.exportToExcel}>D</button> - <span className="tip">Download Excel</span>
+            <button onClick={this.exportToExcel}>D</button> -{" "}
+            <span className="tip">Download Excel</span>
           </li>
         </ul>
       </div>
