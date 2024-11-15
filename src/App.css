@@ -125,6 +125,12 @@ body {
   text-align: center;
   text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
 }
+.history p {
+  color: #b8b8b8;
+  margin-bottom: 15px;
+  text-align: center;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+}
 
 .log-entry {
   display: flex;
