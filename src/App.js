@@ -128,26 +128,22 @@ class App extends Component {
       case 'r':
         this.resetTimer();
         break;
-      case 'S':
-      case 's':
-        this.switchMode();
-        break;
-      case 'ArrowUp':
-      case 'ArrowDown':
-      case 'ArrowLeft':
-      case 'ArrowRight':
-        this.handleCursorMove(event.key.toLowerCase().replace('arrow', ''));
-        break;
+      
       case 'Enter':
         this.toggleEditing();
         break;
       case ' ':
         this.pauseTimer();
         break;
+      case 'D':
+      case 'd':
+        this.exportToExcel(); // Add this case for the 'D' key
+        break;
       default:
         break;
     }
   };
+  
 
   exportToExcel = () => {
     const currentDate = new Date().toLocaleDateString();
@@ -199,7 +195,7 @@ class App extends Component {
             <li>
             <button onClick={this.pauseTimer}>Space</button> - <span className="tip">{paused ? 'start' : 'pause'} timer</span>
           </li>
-          <li>
+          {/* <li>
             <button onClick={this.switchMode}>S</button> - 
             {mode === 'countdown' ? (
               <span className="tip">
@@ -210,20 +206,20 @@ class App extends Component {
                 <button onClick={() => this.switchMode('countdown')}>countdown</button> or <span>stopwatch ✓</span>
               </span>
             )}
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <button onClick={() => this.handleCursorMove('left')}>←</button>
             <button onClick={() => this.handleCursorMove('right')}>→</button>
             <button onClick={() => this.handleCursorMove('up')}>↑</button>
             <button onClick={() => this.handleCursorMove('down')}>↓</button> - <span className="tip">edit timer</span>
-          </li>
+          </li> */}
           <li>
             <button onClick={this.resetTimer}>R</button> - <span className="tip">reset timer</span>
           </li>
         
         
           <li>
-            <button onClick={this.exportToExcel}>Export to Excel</button> - <span className="tip">export timer details to Excel</span>
+            <button onClick={this.exportToExcel}>D</button> - <span className="tip">Download Excel</span>
           </li>
         </ul>
       </div>
